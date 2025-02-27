@@ -1,6 +1,6 @@
 % ====================== CARREGAR IMATGES ======================
 
-folder = './highway';
+folder = './highway/input';
 files = dir(fullfile(folder, 'in*.jpg'));
 
 images = cell(1, 1350 - 1051 + 1);
@@ -20,3 +20,8 @@ end
 
 disp('Carga completa de imágenes.');
 
+
+% ====================== SEPARACIÓ TRAIN/TEST ======================
+
+im_train = images(1:150);
+im_test = images(151:300);
