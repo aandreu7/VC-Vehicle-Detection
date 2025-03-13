@@ -107,12 +107,11 @@ end
 %% ================================ OPENING ===========================
  
 function opened_images = apply_opening(im, segmentation_images)
-    SE = strel("disk", 1);
-    SE2 = strel('diamond', 1);
+    SE = strel("rectangle", [3,3]);
 
     opened_images = cell(1, size(im, 2));
     for x = 1:size(im, 2)
-        opened_images{x} = imdilate(imerode(segmentation_images{x}, SE), SE2);
+        opened_images{x} = imdilate(imerode(segmentation_images{x}, SE), SE);
     end
 
     figure(5)
@@ -136,6 +135,8 @@ open(video);
 for i = 1:length(opened_images_test)
  writeVideo(video, opened_images_test{i});
 end
+
+close(video)
 %% ========================= AVALUACIÓ ====================================
 
 accuracy = zeros(1, length(opened_images_test));
@@ -160,5 +161,4 @@ end
 mean_accuracy = mean(accuracy);
 
 fprintf('Accuracy mitjà: %.4f\n', mean_accuracy);
-
 
