@@ -107,3 +107,19 @@ imshow(segmentation_images{7});
 subplot(1, 2, 2);
 imshow(images{7});
 sgtitle('Segmentació avançada: primera aproximació');
+
+%% ================================ OPENING ===========================
+
+SE = strel("disk",1)
+
+SE2 = strel('diamond',1);
+
+opened_images = cell(1, size(images, 2));
+for x = 1:size(images, 2)
+    opened_images{x} = imdilate(imerode(segmentation_images{x},SE),SE2);
+end
+figure(5)
+subplot(1, 2, 1);
+imshow(segmentation_images{7});
+subplot(1, 2, 2);
+imshow(opened_images{7});
