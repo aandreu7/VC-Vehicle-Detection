@@ -147,9 +147,9 @@ for i = 1:length(opened_images_test)
 
     gt = uint8(gt > 0) * 255;
 
-    TP = sum(segmented(:) == 1 & gt(:) == 255);
+    TP = sum(segmented(:) == 255 & gt(:) == 255);
     TN = sum(segmented(:) == 0 & gt(:) == 0);
-    FP = sum(segmented(:) == 1 & gt(:) == 0);
+    FP = sum(segmented(:) == 255 & gt(:) == 0);
     FN = sum(segmented(:) == 0 & gt(:) == 255);
 
     total_pixels = numel(segmented);
@@ -161,4 +161,3 @@ end
 mean_accuracy = mean(accuracy);
 
 fprintf('Accuracy mitjà: %.4f\n', mean_accuracy);
-
