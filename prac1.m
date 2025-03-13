@@ -64,4 +64,46 @@ figure(2);
 imshow(sd_image);
 title('Imatge de la desviació estàndard');
 
+%% ====================== SEGMENTACIÓ BÀSICA ======================
 
+thr = 40;
+
+segmentation_images = cell(1, size(images, 2));
+for x=1:size(images, 2)
+    segmentation_images{x} = abs(images{x} - mean_image) > thr;
+end
+
+% Imatge de prova
+figure(3);
+imshow(segmentation_images{7});
+title('Segmentació bàsica')
+
+
+%% ====================== SEGMENTACIÓ AVANÇADA ======================
+
+% Primera aproximació (1 si |Ii,j − µi,j | > ασi,j + β, 0 en cas contrari)
+
+a = 0.15 * sd_image;
+b = 5;
+
+filter_image = sd_image;
+filter_image(filter_image < 35) = 130; % Blanquejem la imatge per millorar els resultats (opcional)
+
+threshold = a + b;
+adjusted_mean = mean_image - filter_image;
+
+segmentation_images = cell(1, size(images, 2));
+for x = 1:size(images, 2)
+    diff_image = abs(images{x} - adjusted_mean) > threshold;
+    segmentation_images{x} = adjusted_mean - uint8(diff_image * 255); %im2uint8(diff_image); %
+    segmentation_images{x}(segmentation_images{x} > b) = 255;
+end
+
+
+% Imatge de prova
+figure(4);
+subplot(1, 2, 1);
+imshow(segmentation_images{7});
+subplot(1, 2, 2);
+imshow(images{7});
+sgtitle('Segmentació avançada: primera aproximació');
