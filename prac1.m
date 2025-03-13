@@ -129,8 +129,13 @@ end
 segmentation_images_test = segment_images(im_test, mean_image, sd_image);
 opened_images_test = apply_opening(im_test, segmentation_images_test);
 
+video = VideoWriter('video_output.avi', 'Motion JPEG AVI');
+video.FrameRate = 20;  
+open(video);
 
-
+for i = 1:length(opened_images_test)
+ writeVideo(video, opened_images_test{i});
+end
 %% ========================= AVALUACIÓ ====================================
 
 accuracy = zeros(1, length(opened_images_test));
