@@ -33,25 +33,12 @@ im_test = images(151:300);
 
 
 % ====================== CÀLCUL MITJANA I DESVIACIÓ TÍPICA ======================
+images_stack = cat(3, im_train{:});
 
-[M, N] = size(im_train{1});
-
-num_images = size(im_train, 2);
-
-mean_image = zeros(M, N, 'double');
-sd_image = zeros(M, N, 'double');    
-
-% Mitjana
-for i = 1:num_images
-    mean_image = mean_image + double(im_train{i});
-end
-mean_image = mean_image / num_images;
+mean_image = mean(double(images_stack), 3);
 
 % Desviació estàndard
-for i = 1:num_images
-    sd_image = sd_image + (double(im_train{i}) - mean_image).^2;
-end
-sd_image = sqrt(sd_image / num_images);
+sd_image = std(double(images_stack), 0, 3);
 
 mean_image = uint8(mean_image);
 sd_image = uint8(sd_image);
@@ -68,7 +55,7 @@ title('Imatge de la desviació estàndard');
 
 thr = 40;
 
-segmentation_images = cell(1, size(images, 2));
+segmentation_images = cell(1, size(im_train, 2));
 for x=1:size(images, 2)
     segmentation_images{x} = abs(images{x} - mean_image) > thr;
 end
