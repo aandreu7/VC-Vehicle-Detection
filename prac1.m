@@ -110,9 +110,10 @@ sgtitle('Segmentació avançada: primera aproximació');
 
 %% ================================ OPENING ===========================
 
-SE = strel("disk",1)
+SE = strel('rectangle', [3, 3]);
 
-SE2 = strel('diamond',1);
+SE2 = strel('rectangle', [3, 3]); 
+
 
 opened_images = cell(1, size(images, 2));
 for x = 1:size(images, 2)
@@ -123,3 +124,13 @@ subplot(1, 2, 1);
 imshow(segmentation_images{7});
 subplot(1, 2, 2);
 imshow(opened_images{7});
+
+%% ============================== GRAVAR VIDEO ==========================
+video = VideoWriter('video_output.avi', 'Motion JPEG AVI');
+video.FrameRate = 20;  
+open(video);
+
+for i = 1:length(opened_images)
+    writeVideo(video, opened_images{i});
+end
+close(video);
