@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 from skimage.morphology import rectangle, erosion, dilation
 from skimage.io import imsave
 import imageio
+from PIL import Image
+from skimage.color import rgb2gray
 
 # ====================== CARREGAR IMATGES ======================
 
@@ -15,38 +17,53 @@ images = []
 
 for file in files:
     num = int(file[2:8])
-    if 1051 <= num <= 1350:
+    if 1051 <= num <= 2050:
         filename = os.path.join(folder, file)
-        im_color = cv2.imread(filename)
-        images.append(cv2.cvtColor(im_color, cv2.COLOR_BGR2GRAY))
+        im_color = Image.open(filename)
+
+        # Convertir la imagen a escala de grises usando PIL
+        im_gray = im_color.convert('L')
+        
+        # Convertir a un array de numpy
+        im_gray = np.array(im_gray)
+        
+        # Agregar la imagen en escala de grises a la lista
+        images.append(im_gray)
 
 print('Carga completa de imágenes.')
 
 # ====================== SEPARACIÓ TRAIN/TEST ======================
 
-im_train = images[:150]
-im_test = images[150:300]
+im_train = np.array(images[:150], dtype=np.float64)
+im_test = np.array(images[150:], dtype=np.float64)
 
 # ====================== CÀLCUL MITJANA I DESVIACIÓ TÍPICA ======================
 
-def compute_mean_and_sd(im_list):
-    # Convertim la llista d'imatges en un array 3D (pila d'imatges)
-    images_stack = np.stack(im_list, axis=-1)
+def compute_mean_and_sd(im):
+    # Obtener las dimensiones de la primera imagen
+    M, N = im[0].shape
     
-    # Càlcul de la mitjana i la desviació estàndard
-    mean_image = np.mean(images_stack, axis=-1).astype(np.uint8)
-    sd_image = np.std(images_stack, axis=-1).astype(np.uint8)
+    # Número de imágenes
+    num_images = len(im)
     
-    # Mostrem les imatges
+    # Convertir todo el array de imágenes a float64 de una vez
+    im = np.array(im, dtype=np.float64)
+    
+    # Calcular la media usando el axis correcto (más eficiente)
+    mean_image = np.mean(im, axis=0)
+    
+    # Calcular la desviación estándar usando la fórmula de MATLAB
+    # MATLAB usa: sqrt(sum((X - mean(X)).^2) / (N-1))
+    sd_image = np.sqrt(np.sum((im - mean_image) ** 2, axis=0) / (num_images - 1))
+    
+    # Mostrar las imágenes
     plt.figure(1)
     plt.imshow(mean_image, cmap='gray')
-    plt.title('Imatge de la mitjana')
-    plt.axis('off')
+    plt.title('Imagen de la media')
     
     plt.figure(2)
     plt.imshow(sd_image, cmap='gray')
-    plt.title('Imatge de la desviació estàndard')
-    plt.axis('off')
+    plt.title('Imagen de la desviación estándar')
     
     plt.show()
     
@@ -55,7 +72,7 @@ def compute_mean_and_sd(im_list):
 # ====================== SEGMENTACIÓ BÀSICA ======================
 
 def segment_basic(im_list, mean_image):
-    thr = 40
+    thr = 20
     
     segmentation_images = []
     for img in im_list:
@@ -74,20 +91,18 @@ def segment_basic(im_list, mean_image):
 # ====================== SEGMENTACIÓ AVANÇADA ======================
 
 def segment_images(im_list, mean_image, sd_image):
-    a = 0.15 * sd_image
+    a = 1.5 * sd_image
     b = 5
-    
-    filter_image = np.copy(sd_image)
-    filter_image[filter_image < 35] = 130
+
     
     threshold = a + b
-    adjusted_mean = mean_image - filter_image
     
     segmentation_images = []
     for img in im_list:
-        diff_image = np.abs(img - adjusted_mean) > threshold
-        segmented_img = adjusted_mean - (diff_image.astype(np.uint8) * 255)
+        diff_image = np.abs(img) > threshold
+        segmented_img = (diff_image.astype(np.uint8) * 255)
         segmented_img[segmented_img > b] = 255
+        segmented_img = 255-segmented_img
         segmentation_images.append(segmented_img)
     
     # Mostrem la imatge segmentada i la imatge original
@@ -110,7 +125,7 @@ def segment_images(im_list, mean_image, sd_image):
 # ===================== OPENING ============================
 
 def apply_opening(im_list, segmentation_images):
-    SE = rectangle(3, 3)  # Element estructurant rectangular 3x3
+    SE = rectangle(4, 4)  # Element estructurant rectangular 3x3
     
     opened_images = []
     for seg_img in segmentation_images:
@@ -139,12 +154,21 @@ def apply_opening(im_list, segmentation_images):
 def save_video(images, filename='video_output.avi', fps=20):
     with imageio.get_writer(filename, fps=fps) as writer:
         for img in images:
-            writer.append_data((img * 255).astype(np.uint8))
+            # Asegurar que la imagen está en el rango correcto [0, 255]
+            img = np.clip(img, 0, 1)  # Limitar los valores al rango [0,1]
+            img = (img * 255).astype(np.uint8)  # Convertir a uint8
             
+            # Si la imagen está en escala de grises, convertir a RGB
+            if len(img.shape) == 2:
+                img = np.stack([img] * 3, axis=-1)  # Convertir a formato (H, W, 3)
             
-mean_image, sd_image =  compute_mean_and_sd(im_test)
+            writer.append_data(img)
+            
+mean_image, sd_image = compute_mean_and_sd(im_test)
 segmentation_images = segment_images(im_test, mean_image, sd_image)
 opened_images = apply_opening(im_test, segmentation_images)
+
+# Guardar el video con las imágenes corregidas
 save_video(opened_images)
 
 
@@ -169,4 +193,3 @@ def evaluate_segmentation(opened_images_test, images_gt):
     mean_accuracy = np.mean(accuracy)
     print(f'Accuracy mitjà: {mean_accuracy:.4f}')
     return mean_accuracy
-
