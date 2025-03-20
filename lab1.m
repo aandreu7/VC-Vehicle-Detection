@@ -161,24 +161,3 @@ end
 mean_accuracy = mean(accuracy);
 
 fprintf('Accuracy mitjà: %.4f\n', mean_accuracy);
-
-
-%% ====================== TASCA 8 ======================
-
-% Podem agafar els frames on els cotxes comencen a aparèixer per amunt de
-% la imatge i per on comencen a sortir per avall. D'aquesta manera
-% mitjançant el número de frames que hi ha entre aquestes dues imatges i
-% els fps als que va el vídeo es podria treure el temps que ha trigat el
-% cotxe. En cas de voler detectar punts més concrets es podria per calcular 
-% la distància mesurar la longitud d'una línia discontinua i podriem fer el
-% càlcul de velocitat (distància / temps) a mesura que es va apropant per cada línia.
-
-
-% Solució més cara
-
-% Es col·loquen dues càmeres en punts diferents i es mesura el temps que
-% tarda un vehicle en recórrer la distància entre elles, indentificant-los
-% per matrícula. Aquest sistema pot tenir certs problemes ja que pot haver
-% soroll per causes mediambientals o infraccions on s'oculta la matrícula.
-% També, es podrien utilitzar sensors físics per tal d'aprofitar l'efecte
-% Doppler, aprofitant els canvis de freqüencia en les longituds d'ones.
